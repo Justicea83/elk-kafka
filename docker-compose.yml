@@ -1,0 +1,109 @@
+version: '3.6'
+services:
+  Elasticsearch:
+    image: elasticsearch:7.16.2
+    container_name: elasticsearch
+    volumes:
+    - elastic_data:/usr/share/elasticsearch/data/
+    environment:
+      ES_JAVA_OPTS: "-Xmx256m -Xms256m"
+      discovery.type: single-node    
+    ports:
+    - '9200:9200'
+    - '9300:9300'
+    networks:
+      - elk
+
+  Logstash:
+    image: logstash:7.16.2
+    container_name: logstash
+    volumes:
+    - ./logstash/:/logstash_dir
+    command: >
+      sh -c "chmod +x /logstash_dir/start.sh &&
+            /logstash_dir/start.sh &&
+             logstash -f /logstash_dir/logstash-kafka.conf"
+    depends_on:
+      - Elasticsearch
+      - kafka
+    ports:
+    - '9600:9600'
+    environment:
+      LS_JAVA_OPTS: "-Xmx4g -Xms4g"    
+    networks:
+      - elk
+
+  Kibana:
+    image: kibana:7.16.2
+    container_name: kibana
+    ports:
+    - '5601:5601'
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200  
+    depends_on:
+      - Elasticsearch  
+    networks:
+      - elk
+
+  zookeeper:
+    container_name: zookeeper
+    image: confluentinc/cp-zookeeper:7.2.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - elk
+
+  kafka_ui:
+    image: provectuslabs/kafka-ui:latest
+    restart: on-failure
+    ports:
+      - '9093:8080'
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      DYNAMIC_CONFIG_ENABLED: 'true'
+    networks:
+      - elk
+
+  kafka:
+    container_name: kafka
+    image: confluentinc/cp-kafka:7.2.0
+    depends_on:
+      - zookeeper
+    ports:
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_ADVERTISED_HOST_NAME: localhost
+    healthcheck:
+      test: nc -vz kafka 9092 || exit -1
+      # start_period: 15s
+      interval: 5s
+      timeout: 10s
+      retries: 10
+    networks:
+      - elk
+
+  app:
+    build:
+      context: .
+    volumes:
+      - .:/app
+    depends_on:
+      - kafka
+    networks:
+      - elk
+
+volumes:
+  elastic_data: {}
+
+networks:
+  elk:
