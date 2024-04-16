@@ -60,7 +60,7 @@ services:
     image: provectuslabs/kafka-ui:latest
     restart: always
     ports:
-      - '9093:8080'
+      - '8080:8080'
     depends_on:
       - kafka
     environment:
