@@ -1,0 +1,58 @@
+name: Zip and Drop
+
+on:
+    push:
+        branches:
+            - main
+
+jobs:
+    build-and-deploy:
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Checkout code
+                uses: actions/checkout@v2
+
+            -   name: Set up environment variables for VM credentials
+                run: |
+                    if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+                      # setup the environment variable for production
+                      echo "CURRENT_ENV=prod" >> $GITHUB_ENV
+
+                      echo "VM_HOST=${{ secrets.VM_HOST_PROD }}" >> $GITHUB_ENV
+                    fi
+
+            -   name: Zip Repository
+                run: zip -r deploy.zip .
+
+            -   name: Clear VM Directory
+                uses: appleboy/ssh-action@master
+                with:
+                    host: ${{ env.VM_HOST }}
+                    username: justicea83
+                    key: ${{ (env.CURRENT_ENV == 'dev' && secrets.VM_SSH_SECRET_DEV) || (env.CURRENT_ENV == 'prod' && secrets.VM_SSH_SECRET_PROD) }}
+                    script: |
+                      
+                       # Write the SSH private key to a temporary file
+                      
+                      if [[ "${{ env.CURRENT_ENV }}" == "dev" ]]; then
+                        echo "${{ secrets.VM_SSH_SECRET_DEV }}" > ssh_key
+                      elif [[ "${{ env.CURRENT_ENV }}" == "prod" ]]; then
+                        echo "${{ secrets.VM_SSH_SECRET_PROD }}" > ssh_key
+                      fi
+  
+                      chmod 600 ssh_key
+                    
+                      cd /home/justicea83
+                      echo "Uploading the zip file..."
+                      
+                      rm -rf *
+                    
+                      scp -o StrictHostKeyChecking=no -i ssh_key ${GITHUB_WORKSPACE}/deploy.zip justicea83@${{ env.VM_HOST }}:/home/justicea83
+                      
+                      rm -f ssh_key
+          
+                      # Remove old deployment and unzip new one
+                      
+                      unzip -o deploy.zip
+                    
+                      rm deploy.zip
