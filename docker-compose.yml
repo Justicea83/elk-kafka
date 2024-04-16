@@ -20,7 +20,7 @@ services:
     volumes:
     - ./logstash/:/logstash_dir
     command: >
-      sh -c "sudo chmod +x /logstash_dir/start.sh &&
+      sh -c "su && chmod +x /logstash_dir/start.sh &&
             /logstash_dir/start.sh &&
              logstash -f /logstash_dir/logstash-kafka.conf"
     depends_on:
