@@ -56,4 +56,10 @@ jobs:
                       
                         unzip -o deploy.zip -d app
                       
+                        cd app
+                      
+                        docker compose up -d --build
+                      
+                        cd ..
+                      
                         rm -rf deploy.zip
