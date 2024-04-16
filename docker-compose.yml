@@ -17,6 +17,7 @@ services:
   Logstash:
     image: logstash:7.16.2
     container_name: logstash
+    user: root
     volumes:
     - ./logstash/:/logstash_dir
     command: >
