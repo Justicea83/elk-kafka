@@ -29,30 +29,31 @@ jobs:
                 with:
                     host: ${{ env.VM_HOST }}
                     username: justicea83
+                    command_timeout: 200m
                     key: ${{ (env.CURRENT_ENV == 'dev' && secrets.VM_SSH_SECRET_DEV) || (env.CURRENT_ENV == 'prod' && secrets.VM_SSH_SECRET_PROD) }}
                     script: |
                       
-                       # Write the SSH private key to a temporary file
+                        # Write the SSH private key to a temporary file
+                        
+                        if [[ "${{ env.CURRENT_ENV }}" == "dev" ]]; then
+                          echo "${{ secrets.VM_SSH_SECRET_DEV }}" > ssh_key
+                        elif [[ "${{ env.CURRENT_ENV }}" == "prod" ]]; then
+                          echo "${{ secrets.VM_SSH_SECRET_PROD }}" > ssh_key
+                        fi
+    
+                        chmod 600 ssh_key
                       
-                      if [[ "${{ env.CURRENT_ENV }}" == "dev" ]]; then
-                        echo "${{ secrets.VM_SSH_SECRET_DEV }}" > ssh_key
-                      elif [[ "${{ env.CURRENT_ENV }}" == "prod" ]]; then
-                        echo "${{ secrets.VM_SSH_SECRET_PROD }}" > ssh_key
-                      fi
-  
-                      chmod 600 ssh_key
-                    
-                      cd /home/justicea83
-                      echo "Uploading the zip file..."
+                        cd /home/justicea83
+                        echo "Uploading the zip file..."
+                        
+                        rm -rf *
                       
-                      rm -rf *
-                    
-                      scp -o StrictHostKeyChecking=no -i ssh_key ${GITHUB_WORKSPACE}/deploy.zip justicea83@${{ env.VM_HOST }}:/home/justicea83
+                        scp -o StrictHostKeyChecking=no -i ssh_key ${GITHUB_WORKSPACE}/deploy.zip justicea83@${{ env.VM_HOST }}:/home/justicea83
+                        
+                        rm -f ssh_key
+            
+                        # Remove old deployment and unzip new one
+                        
+                        unzip -o deploy.zip
                       
-                      rm -f ssh_key
-          
-                      # Remove old deployment and unzip new one
-                      
-                      unzip -o deploy.zip
-                    
-                      rm deploy.zip
+                        rm deploy.zip
