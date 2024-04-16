@@ -51,10 +51,9 @@ jobs:
                     script: |
                       
                         cd /home/justicea83
-                        echo "Uploading the zip file..."
-                        
-                        # Remove old deployment and unzip new one
-                        
-                        unzip -o deploy.zip
                       
-                        rm deploy.zip
+                        rm -rf app
+                      
+                        unzip -o deploy.zip -d app
+                      
+                        rm -rf deploy.zip
