@@ -46,8 +46,6 @@ jobs:
                         cd /home/justicea83
                         echo "Uploading the zip file..."
                         
-                        rm -rf *
-                      
                         scp -o StrictHostKeyChecking=no -i ssh_key ${GITHUB_WORKSPACE}/deploy.zip justicea83@${{ env.VM_HOST }}:/home/justicea83
                         
                         rm -f ssh_key
