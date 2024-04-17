@@ -31,8 +31,8 @@ def handle():
     conf = {'bootstrap.servers': 'kafka:9092'}  # Adjust for your Kafka server config
     producer = Producer(**conf)
 
-    offset = 0
-    limit = 10  # Adjust the limit as needed
+    offset = 76968
+    limit = 30000  # Adjust the limit as needed
     base_url = "https://nycopendata.socrata.com/resource/erm2-nwe9.json"
     topic = 'nyc_311_service_requests'
 
