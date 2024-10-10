@@ -4,14 +4,6 @@ LABEL maintainer="justicea83"
 ENV PYTHONUNBUFFERED 1
 ENV PYTHONDONTWRITEBYTECODE 1
 
-# Install system dependencies
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    librdkafka-dev \
-    gcc \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
-
 COPY ./requirements.txt /tmp/requirements.txt
 RUN mkdir "app"
 COPY ./stream.py /app

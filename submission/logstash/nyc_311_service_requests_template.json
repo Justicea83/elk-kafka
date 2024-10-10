@@ -1,0 +1,28 @@
+{
+    "index_patterns": ["nyc_311_service_requests-*"],
+    "template": {
+      "settings": {
+        "number_of_shards": 1
+      },
+      "mappings": {
+        "properties": {
+          "location": {
+            "type": "geo_point"
+          },
+          "created_date": {
+            "type": "date",
+            "format": "strict_date_optional_time||epoch_millis"
+          },
+          "latitude": {
+            "type": "float"
+          },
+          "longitude": {
+            "type": "float"
+          }
+        }
+      }
+    },
+    "priority": 200,
+    "composed_of": []
+  }
+  
